@@ -1,6 +1,6 @@
 {
   "name": "detect-running-module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
   "devDependencies": {
@@ -13,7 +13,7 @@
     "sqlite3": "5.0.0"
   },
   "scripts": {
-    "build": "midway-bin build -c",
+    "build": "midway-bin build -c && rm -rf dist/.mwcc-cache",
     "test": "midway-bin test --ts",
     "cov": "midway-bin cov --ts",
     "ci": "npm run test"
