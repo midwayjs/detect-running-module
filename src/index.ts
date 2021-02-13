@@ -20,6 +20,27 @@ function findBaseDir(baseDir: string) {
   }
 }
 
+export function getModuleNameByPath(modPath: string) {
+  // cnpm
+  let result = modPath.match(/node_modules\/_([@\w-]+)@/);
+  if (result && result[1]) {
+    debug(`using pkg = ${result[1]}`);
+    return result[1].replace('_', '/');
+  } else {
+    // npm
+    result = modPath.match(/node_modules\/([\w@-]+)\//);
+    if (result && result[1]) {
+      if (result[1].includes('@')) {
+        // node_modules/@midwayjs/glob/dist/index.js
+        const pkgName = result[1] + '/' + modPath.slice(result.index).split(sep)[2];
+        return pkgName;
+      } else {
+        return result[1];
+      }
+    }
+  }
+}
+
 export const getRunningDependencies = (baseDir = process.cwd()) => {
   const cacheList = Object.keys(require.cache);
   const usingPkgs = new Set();
@@ -33,24 +54,7 @@ export const getRunningDependencies = (baseDir = process.cwd()) => {
     const isMatch = modPath.startsWith(join(baseDir, 'node_modules'));
     debug(`isMatch = ${isMatch}, modPath = ${modPath}`);
     if (isMatch) {
-      // cnpm
-      let result = modPath.match(/node_modules\/_([@\w-]+)@/);
-      if (result && result[1]) {
-        debug(`using pkg = ${result[1]}`);
-        usingPkgs.add(result[1]);
-      } else {
-        // npm
-        result = modPath.match(/node_modules\/([\w@-]+)\//);
-        if (result && result[1]) {
-          if (result[1].includes('@')) {
-            // node_modules/@midwayjs/glob/dist/index.js
-            const pkgName = result[1] + '/' + modPath.slice(result.index).split(sep)[2];
-            usingPkgs.add(pkgName);
-          } else {
-            usingPkgs.add(result[1]);
-          }
-        }
-      }
+      usingPkgs.add(getModuleNameByPath(modPath));
     }
   }
 
