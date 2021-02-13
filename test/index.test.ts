@@ -6,6 +6,7 @@ describe('/index.test.js', () => {
     require('./fixtures/base-app/index');
     expect(getRunningDependencies(join(__dirname, './fixtures/base-app'))).toEqual([
       'sequelize',
+      "@midwayjs/glob",
       'sqlite3'
     ])
   });

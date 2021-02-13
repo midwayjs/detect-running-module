@@ -1,5 +1,6 @@
-import { join, dirname } from 'path';
+import { join, dirname, sep } from 'path';
 import { existsSync } from 'fs';
+const debug = require('util').debuglog('detect');
 
 function intersection(setA, setB) {
   let _intersection = new Set();
@@ -26,11 +27,29 @@ export const getRunningDependencies = (baseDir = process.cwd()) => {
   const originBaseDir = baseDir;
   baseDir = findBaseDir(baseDir);
 
+  debug(`baseDir = ${baseDir}, originBaseDir = ${originBaseDir}`);
+
   for (const modPath of cacheList) {
-    if (modPath.startsWith(join(baseDir, 'node_modules'))) {
-      const result = modPath.match(/node_modules\/_{0,1}([\w-]+)@/);
+    const isMatch = modPath.startsWith(join(baseDir, 'node_modules'));
+    debug(`isMatch = ${isMatch}, modPath = ${modPath}`);
+    if (isMatch) {
+      // cnpm
+      let result = modPath.match(/node_modules\/_([@\w-]+)@/);
       if (result && result[1]) {
+        debug(`using pkg = ${result[1]}`);
         usingPkgs.add(result[1]);
+      } else {
+        // npm
+        result = modPath.match(/node_modules\/([\w@-]+)\//);
+        if (result && result[1]) {
+          if (result[1].includes('@')) {
+            // node_modules/@midwayjs/glob/dist/index.js
+            const pkgName = result[1] + '/' + modPath.slice(result.index).split(sep)[2];
+            usingPkgs.add(pkgName);
+          } else {
+            usingPkgs.add(result[1]);
+          }
+        }
       }
     }
   }
